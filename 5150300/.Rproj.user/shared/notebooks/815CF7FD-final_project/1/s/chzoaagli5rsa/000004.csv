@@ -1,0 +1,17 @@
+"0","# Produce the first step information"
+"0","Mousesub.basis = music_basis(Mousesub.sce, clusters = 'cellType', samples = 'sampleID', "
+"0","                             select.ct = c('Endo', 'Podo', 'PT', 'LOH', 'DCT', 'CD-PC', 'CD-IC', 'Fib',"
+"0","                                           'Macro', 'Neutro','B lymph', 'T lymph', 'NK'))"
+"2","Creating Relative Abudance Matrix...
+"
+"2","Creating Variance Matrix...
+"
+"2","Creating Library Size Matrix...
+"
+"0","# Plot the dendrogram of design matrix and cross-subject mean of relative abundance"
+"0","par(mfrow = c(1, 2))"
+"0","d <- dist(t(log(Mousesub.basis$Disgn.mtx + 1e-6)), method = ""euclidean"")"
+"0","# Hierarchical clustering using Complete Linkage"
+"0","hc1 <- hclust(d, method = ""complete"" )"
+"0","# Plot the obtained dendrogram"
+"0","plot(hc1, cex = 0.6, hang = -1, main = 'Cluster log(Design Matrix)')"

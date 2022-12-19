@@ -1,0 +1,4 @@
+"0","bulk.meta = SingleCellExperiment::exprs(GSE50244.bulk.eset)
+"
+"2","Error: 'exprs' is not an exported object from 'namespace:SingleCellExperiment'
+"

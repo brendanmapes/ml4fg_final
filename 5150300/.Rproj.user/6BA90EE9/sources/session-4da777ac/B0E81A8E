@@ -1,0 +1,28 @@
+{
+    "id": "B0E81A8E",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1671332492227.0,
+    "source_on_save": false,
+    "relative_order": 11,
+    "properties": {
+        "id": "36248f4bc76243b8bb6ef1896c1222ee",
+        "name": "bench",
+        "title": "bench",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 94288879983816,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1671332492227,
+    "read_only": false,
+    "read_only_alternatives": []
+}

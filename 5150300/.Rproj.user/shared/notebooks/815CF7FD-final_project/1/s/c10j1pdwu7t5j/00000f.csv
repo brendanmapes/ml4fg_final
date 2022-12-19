@@ -1,0 +1,17 @@
+"0","library(Seurat)
+"
+"2","Registered S3 method overwritten by 'htmlwidgets':
+  method           from         
+  print.htmlwidget tools:rstudio
+"
+"2","Attaching SeuratObject
+"
+"2","
+Attaching package: ‘Seurat’
+
+"
+"2","The following object is masked from ‘package:SummarizedExperiment’:
+
+    Assays
+
+"

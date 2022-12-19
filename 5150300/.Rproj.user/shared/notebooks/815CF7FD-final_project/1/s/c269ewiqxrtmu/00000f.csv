@@ -1,0 +1,8 @@
+"0","##load data"
+"0","#https://xuranw.github.io/MuSiC/data/GSE50244bulkeset.rds"
+"0","#https://xuranw.github.io/MuSiC/data/XinT2Dsce.rds"
+"0","#https://xuranw.github.io/MuSiC/data/EMTABsce_healthy.rds"
+"0",""
+"0","GSE50244.bulk.eset <- readRDS(""/cloud/project/GSE50244bulkeset.rds"")"
+"0","XinT2D.sce <- readRDS(""/cloud/project/XinT2Dsce.rds"")"
+"0","EMTAB.sce = readRDS(""/cloud/project/EMTABsce_healthy.rds"")"

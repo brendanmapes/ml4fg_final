@@ -1,0 +1,28 @@
+{
+    "id": "5A4C4EED",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1671404818988.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "id": "c621c84128e8448b97cae7801677b8ad",
+        "name": "Est.prop.Xin",
+        "title": "Est.prop.Xin",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1671334566,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1671404818988,
+    "read_only": false,
+    "read_only_alternatives": []
+}

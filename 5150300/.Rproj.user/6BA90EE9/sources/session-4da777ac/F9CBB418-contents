@@ -1,0 +1,272 @@
+---
+title: "MuSiC"
+output: html_document
+date: "2022-12-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+##non-pregrouped cell types
+```{r}
+##load data
+#https://xuranw.github.io/MuSiC/data/GSE50244bulkeset.rds
+#https://xuranw.github.io/MuSiC/data/XinT2Dsce.rds
+#https://xuranw.github.io/MuSiC/data/EMTABsce_healthy.rds
+
+GSE50244.bulk.eset <- readRDS("/cloud/project/GSE50244bulkeset.rds")
+XinT2D.sce <- readRDS("/cloud/project/XinT2Dsce.rds")
+EMTAB.sce = readRDS("/cloud/project/EMTABsce_healthy.rds")
+```
+
+```{r}
+bulk.mtx = exprs(GSE50244.bulk.eset)
+bulk.meta = exprs(GSE50244.bulk.eset)
+```
+
+```{r}
+# Bulk expression matrix
+bulk.mtx = exprs(GSE50244.bulk.eset)
+
+# Estimate cell type proportions
+Est.prop.GSE50244 = MuSiC::music_prop(bulk.mtx = bulk.mtx, sc.sce = EMTAB.sce, clusters = 'cellType',
+                               samples = 'sampleID', select.ct = c('alpha', 'beta', 'delta', 'gamma',
+                                                                   'acinar', 'ductal'), verbose = F)
+names(Est.prop.GSE50244)
+#[1] "Est.prop.weighted" "Est.prop.allgene"  "Weight.gene"       "r.squared.full"    "Var.prop"  
+
+```
+```{r}
+library(MuSiC)
+library(dplyr)
+library(reshape2)
+library(cowplot)
+# Jitter plot of estimated cell type proportions
+jitter.fig = Jitter_Est(list(data.matrix(Est.prop.GSE50244$Est.prop.weighted),
+                             data.matrix(Est.prop.GSE50244$Est.prop.allgene)),
+                        method.name = c('MuSiC', 'NNLS'), title = 'Jitter plot of Est Proportions')
+
+# A more sophisticated jitter plot is provided as below. We seperated the T2D subjects and normal 
+#subjects by their HbA1c levels.
+
+m.prop.GSE50244 = rbind(melt(Est.prop.GSE50244$Est.prop.weighted), 
+                        melt(Est.prop.GSE50244$Est.prop.allgene))
+
+colnames(m.prop.GSE50244) = c('Sub', 'CellType', 'Prop')
+m.prop.GSE50244$CellType = factor(m.prop.GSE50244$CellType, levels = c('alpha', 'beta', 'delta', 'gamma', 'acinar', 'ductal'))
+m.prop.GSE50244$Method = factor(rep(c('MuSiC', 'NNLS'), each = 89*6), levels = c('MuSiC', 'NNLS'))
+m.prop.GSE50244$HbA1c = rep(GSE50244.bulk.eset$hba1c, 2*6)
+m.prop.GSE50244 = m.prop.GSE50244[!is.na(m.prop.GSE50244$HbA1c), ]
+m.prop.GSE50244$Disease = factor(c('Normal', 'T2D')[(m.prop.GSE50244$HbA1c > 6.5)+1], levels = c('Normal', 'T2D'))
+m.prop.GSE50244$D = (m.prop.GSE50244$Disease == 'T2D')/5
+m.prop.GSE50244 = rbind(subset(m.prop.GSE50244, Disease == 'Normal'), subset(m.prop.GSE50244, Disease != 'Normal'))
+
+jitter.new = ggplot(m.prop.GSE50244, aes(Method, Prop)) + 
+  geom_point(aes(fill = Method, color = Disease, stroke = D, shape = Disease), 
+             size = 2, alpha = 0.7, position = position_jitter(width=0.25, height=0)) +
+  facet_wrap(~ CellType, scales = 'free') + scale_colour_manual( values = c('white', "gray20")) +
+  scale_shape_manual(values = c(21, 24))+ theme_minimal()
+
+plot_grid(jitter.fig, jitter.new, labels = 'auto')
+```
+```{r}
+# Create dataframe for beta cell proportions and HbA1c levels
+m.prop.ana = data.frame(pData(GSE50244.bulk.eset)[rep(1:89, 2), c('age', 'bmi', 'hba1c', 'gender')],
+                        ct.prop = c(Est.prop.GSE50244$Est.prop.weighted[, 2], 
+                                    Est.prop.GSE50244$Est.prop.allgene[, 2]), 
+                        Method = factor(rep(c('MuSiC', 'NNLS'), each = 89), 
+                        levels = c('MuSiC', 'NNLS')))
+colnames(m.prop.ana)[1:4] = c('Age', 'BMI', 'HbA1c', 'Gender')
+m.prop.ana = subset(m.prop.ana, !is.na(HbA1c))
+m.prop.ana$Disease = factor( c('Normal', 'T2D')[(m.prop.ana$HbA1c > 6.5) + 1], c('Normal', 'T2D') )
+m.prop.ana$D = (m.prop.ana$Disease == 'T2D')/5
+
+ggplot(m.prop.ana, aes(HbA1c, ct.prop)) + 
+  geom_smooth(method = 'lm',  se = FALSE, col = 'black', lwd = 0.25) +
+  geom_point(aes(fill = Method, color = Disease, stroke = D, shape = Disease), size = 2, alpha = 0.7) +  facet_wrap(~ Method) + 
+  ggtitle('HbA1c vs Beta Cell Type Proportion') + theme_minimal() + 
+  scale_colour_manual( values = c('white', "gray20")) + 
+  scale_shape_manual(values = c(21, 24))
+```
+
+
+
+```{r}
+lm.beta.MuSiC = lm(ct.prop ~ HbA1c + Age + BMI + Gender, data = subset(m.prop.ana, Method == 'MuSiC'))
+lm.beta.NNLS = lm(ct.prop ~ HbA1c + Age + BMI + Gender, data = subset(m.prop.ana, Method == 'NNLS'))
+summary(lm.beta.MuSiC)
+
+summary(lm.beta.NNLS)
+```
+##pregrouping cell types 
+```{r}
+#https://xuranw.github.io/MuSiC/data/Mousesub_sce.rds
+#https://xuranw.github.io/MuSiC/data/Mousesub_sce.rds
+Mousesub.sce <- readRDS("/cloud/project/Mousesub_sce.rds")
+Mouse.bulk.eset <- readRDS('/cloud/project/Mousebulkeset.rds')
+
+
+levels(Mousesub.sce$cellType)
+```
+
+```{r}
+# Produce the first step information
+Mousesub.basis = music_basis(Mousesub.sce, clusters = 'cellType', samples = 'sampleID', 
+                             select.ct = c('Endo', 'Podo', 'PT', 'LOH', 'DCT', 'CD-PC', 'CD-IC', 'Fib',
+                                           'Macro', 'Neutro','B lymph', 'T lymph', 'NK'))
+
+# Plot the dendrogram of design matrix and cross-subject mean of relative abundance
+par(mfrow = c(1, 2))
+d <- dist(t(log(Mousesub.basis$Disgn.mtx + 1e-6)), method = "euclidean")
+# Hierarchical clustering using Complete Linkage
+hc1 <- hclust(d, method = "complete" )
+# Plot the obtained dendrogram
+plot(hc1, cex = 0.6, hang = -1, main = 'Cluster log(Design Matrix)')
+d <- dist(t(log(Mousesub.basis$M.theta + 1e-8)), method = "euclidean")
+# Hierarchical clustering using Complete Linkage
+# hc2 <- hclust(d, method = "complete" )
+hc2 <- hclust(d, method = "complete")
+# Plot the obtained dendrogram
+plot(hc2, cex = 0.6, hang = -1, main = 'Cluster log(Mean of RA)')
+```
+```{r}
+x <- t(Mousesub.basis$Disgn.mtx)
+dim(x)
+x <- x[ , 1:500]
+dim(x)
+x <- as.matrix(x)
+y <- data.frame(Mousesub.basis$M.S)
+dim(y)
+y[is.na(y)] <- 0
+x[is.na(x)] <- (min(x, na.rm = TRUE) / 2)
+hfr(x, y, kappa = 0.75)
+```
+
+
+```{r}
+
+Mousesub.basis$Disgn.mtx
+library(hfr)
+library(glmnet)
+dim(data$x)
+dim(data$y)
+data("QuickStartExample", package = "glmnet")
+data <- QuickStartExample
+mod <- hfr(data$x, data$y, kappa = 0.75)
+data
+```
+
+```{r}
+clusters.type = list(C1 = 'Neutro', C2 = 'Podo', C3 = c('Endo', 'CD-PC', 'LOH', 'CD-IC', 'DCT', 'PT'), C4 = c('Macro', 'Fib', 'B lymph', 'NK', 'T lymph'))
+
+cl.type = as.character(Mousesub.sce$cellType)
+
+for(cl in 1:length(clusters.type)){
+  cl.type[cl.type %in% clusters.type[[cl]]] = names(clusters.type)[cl]
+}
+Mousesub.sce$clusterType = factor(cl.type, levels = c(names(clusters.type), 'CD-Trans', 'Novel1', 'Novel2'))
+
+# 13 selected cell types
+s.mouse = unlist(clusters.type)
+s.mouse
+#       C1        C2       C31       C32       C33       C34       C35       C36       C41       C42 
+# "Neutro"    "Podo"    "Endo"   "CD-PC"     "LOH"   "CD-IC"     "DCT"      "PT"   "Macro"     "Fib" 
+#      C43       C44       C45 
+#"B lymph"      "NK" "T lymph" 
+```
+```{r}
+#https://xuranw.github.io/MuSiC/data/IEmarkers.RData
+# This RData file provides two vectors of gene names Epith.marker and Immune.marker
+load("/cloud/project/IEmarkers.RData")
+# We now construct the list of group marker
+IEmarkers = list(NULL, NULL, Epith.marker, Immune.marker)
+names(IEmarkers) = c('C1', 'C2', 'C3', 'C4')
+# The name of group markers should be the same as the cluster names
+
+Est.mouse.bulk = music_prop.cluster(bulk.mtx = exprs(Mouse.bulk.eset), sc.sce = Mousesub.sce, group.markers = IEmarkers, clusters = 'cellType', groups = 'clusterType', samples = 'sampleID', clusters.type = clusters.type)
+```
+```{r}
+XinT2D.construct.full = bulk_construct(XinT2D.sce, clusters = 'cellType', samples = 'SubjectName')
+
+names(XinT2D.construct.full)
+
+dim(XinT2D.construct.full$bulk.counts)
+
+XinT2D.construct.full$bulk.counts[1:5, 1:5]
+
+head(XinT2D.construct.full$num.real)
+
+XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
+head(XinT2D.construct.full$prop.real)
+```
+```{r}
+Est.prop.Xin = music_prop(bulk.mtx = XinT2D.construct.full$bulk.counts, sc.sce = EMTAB.sce,
+                          clusters = 'cellType', samples = 'sampleID', 
+                          select.ct = c('alpha', 'beta', 'delta', 'gamma'))
+```
+
+```{r}
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(Est.prop.Xin$Est.prop.weighted), 
+                           data.matrix(Est.prop.Xin$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
+```
+
+
+#granulator
+```{r}
+BiocManager::install("granulator")
+```
+```{r}
+library(granulator)
+load_ABIS()
+bulkRNAseq_ABIS[1:5, 1:5]
+```
+```{r}
+bulkRNAseq_ABIS[1:5, 1:5]
+```
+```{r}
+sigMatrix_ABIS_S0[1:5, 1:5]
+```
+```{r}
+groundTruth_ABIS[1:5, 1:5]
+```
+```{r}
+sigList = list(
+  ABIS_S0 = sigMatrix_ABIS_S0,
+  ABIS_S1 = sigMatrix_ABIS_S1, 
+  ABIS_S2 = sigMatrix_ABIS_S2, 
+  ABIS_S3 = sigMatrix_ABIS_S3)
+```
+
+```{r}
+plot_similarity(sigMatrix=sigList)
+```
+
+```{r}
+decon <- deconvolute(m = bulkRNAseq_ABIS, sigMatrix = sigList)
+```
+```{r}
+decon$proportions$svr_ABIS_S0[1:5, 1:5]
+
+```
+
+```{r}
+plot_proportions(deconvoluted = decon, method = 'svr', signature = 'ABIS_S0')
+
+```
+```{r}
+plot_deconvolute(deconvoluted = decon, scale = TRUE, labels = FALSE)
+
+```
+
+```{r}
+bench <- benchmark(deconvoluted = decon, ground_truth = groundTruth_ABIS)
+head(bench$summary)
+```
+```{r}
+head(bench$rank)
+```
+

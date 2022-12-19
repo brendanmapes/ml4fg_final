@@ -1,0 +1,15 @@
+"0","BiocManager::install(""granulator"")"
+"2","'getOption(""repos"")' replaces Bioconductor standard repositories, see '?repositories' for details
+
+replacement repositories:
+    CRAN: http://rspm/default/__linux__/focal/latest
+
+"
+"2","Bioconductor version 3.16 (BiocManager 1.30.19), R 4.2.2 (2022-10-31)
+"
+"2","Warning: package(s) not installed when version(s) same as or greater than current; use `force = TRUE` to re-install: 'granulator'"
+"2","Installation paths not writeable, unable to update packages
+  path: /opt/R/4.2.2/lib/R/library
+  packages:
+    boot, foreign, Matrix, nlme
+"

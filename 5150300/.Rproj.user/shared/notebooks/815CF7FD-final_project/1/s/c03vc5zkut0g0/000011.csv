@@ -1,0 +1,6 @@
+"0","pbmcbasis = music_basis(pbmc, clusters = pbmc@assays[[""RNA""]]@counts@Dimnames[[1]], samples = 'sampleID', "
+"0","                             select.ct = c('Endo', 'Podo', 'PT', 'LOH', 'DCT', 'CD-PC', 'CD-IC', 'Fib',"
+"0","                                           'Macro', 'Neutro','B lymph', 'T lymph', 'NK'))"
+"2","Error in h(simpleError(msg, call)) : 
+  error in evaluating the argument 'j' in selecting a method for function '[': error in evaluating the argument 'x' in selecting a method for function '%in%': no slot of name ""colData"" for this object of class ""Seurat""
+"

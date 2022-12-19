@@ -1,0 +1,71 @@
+"0","knitr::opts_chunk$set(echo = TRUE)"
+"0","library(devtools)"
+"2","Loading required package: usethis
+"
+"0","devtools::install_github(""xuranw/MuSiC"")"
+"2","Skipping install of 'MuSiC' from a github remote, the SHA1 (0a3e3af4) has not changed since last install.
+  Use `force = TRUE` to force installation
+"
+"0","library(BiocManager)"
+"2","Bioconductor version 3.16 (BiocManager 1.30.19), R 4.2.2 (2022-10-31)
+"
+"2","
+Attaching package: ‘BiocManager’
+
+"
+"2","The following object is masked from ‘package:devtools’:
+
+    install
+
+"
+"0","BiocManager::install(""Biobase"")"
+"2","'getOption(""repos"")' replaces Bioconductor standard repositories, see '?repositories' for
+details
+
+replacement repositories:
+    CRAN: http://rspm/default/__linux__/focal/latest
+
+"
+"2","Bioconductor version 3.16 (BiocManager 1.30.19), R 4.2.2 (2022-10-31)
+"
+"2","Warning: package(s) not installed when version(s) same as or greater than current; use `force =
+  TRUE` to re-install: 'Biobase'"
+"2","Installation paths not writeable, unable to update packages
+  path: /opt/R/4.2.2/lib/R/library
+  packages:
+    boot, foreign, Matrix, nlme
+"
+"0","BiocManager::install(""TOAST"")"
+"2","'getOption(""repos"")' replaces Bioconductor standard repositories, see '?repositories' for
+details
+
+replacement repositories:
+    CRAN: http://rspm/default/__linux__/focal/latest
+
+"
+"2","Bioconductor version 3.16 (BiocManager 1.30.19), R 4.2.2 (2022-10-31)
+"
+"2","Warning: package(s) not installed when version(s) same as or greater than current; use `force =
+  TRUE` to re-install: 'TOAST'"
+"2","Installation paths not writeable, unable to update packages
+  path: /opt/R/4.2.2/lib/R/library
+  packages:
+    boot, foreign, Matrix, nlme
+"
+"0","BiocManager::install(""SingleCellExperiment"")"
+"2","'getOption(""repos"")' replaces Bioconductor standard repositories, see '?repositories' for
+details
+
+replacement repositories:
+    CRAN: http://rspm/default/__linux__/focal/latest
+
+"
+"2","Bioconductor version 3.16 (BiocManager 1.30.19), R 4.2.2 (2022-10-31)
+"
+"2","Warning: package(s) not installed when version(s) same as or greater than current; use `force =
+  TRUE` to re-install: 'SingleCellExperiment'"
+"2","Installation paths not writeable, unable to update packages
+  path: /opt/R/4.2.2/lib/R/library
+  packages:
+    boot, foreign, Matrix, nlme
+"

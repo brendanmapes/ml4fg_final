@@ -1,0 +1,2 @@
+"0","bench <- benchmark(deconvoluted = decon, ground_truth = groundTruth_ABIS)"
+"0","head(bench$summary)"
