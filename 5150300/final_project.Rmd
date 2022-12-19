@@ -1,36 +1,50 @@
 ---
-title: "MuSiC"
+title: "Bulk RNAseq ell type deconvolution"
 output: html_document
 date: "2022-12-17"
 ---
 
+#Loading required packages: MuSiC from with devtools and TOAST, Biobase, SingleCellExperiment from BiocManager
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(MuSiC)
+library(dplyr)
+library(reshape2)
+library(cowplot)
+library(hfr)
+library(glmnet)
+library(Seurat)
 library(devtools)
 devtools::install_github("xuranw/MuSiC")
 library(BiocManager)
 BiocManager::install("Biobase")
 BiocManager::install("TOAST")
 BiocManager::install("SingleCellExperiment")
+
 ```
 
-##non-pregrouped cell types
+#Data loading (following MuSiC vignette)
 ```{r}
 ##load data
 #https://xuranw.github.io/MuSiC/data/GSE50244bulkeset.rds
 #https://xuranw.github.io/MuSiC/data/XinT2Dsce.rds
 #https://xuranw.github.io/MuSiC/data/EMTABsce_healthy.rds
 
+#Fadista et al. (2014) raw read counts data from bulk RNA-seq of human pancreatic islets to study glucose metabolism in healthy and hyper-hypoglycemic condition
 GSE50244.bulk.eset <- readRDS("/cloud/project/GSE50244bulkeset.rds")
+#Xin et al. (2016), which have 39849 genes and 1492 cells
 XinT2D.sce <- readRDS("/cloud/project/XinT2Dsce.rds")
+# Segerstolpe et al. (2016), which constrains read counts for 25453 genes across 2209 cells.
 EMTAB.sce = readRDS("/cloud/project/EMTABsce_healthy.rds")
 ```
 
+#Data prep
 ```{r}
 bulk.mtx = Biobase::exprs(GSE50244.bulk.eset)
 bulk.meta = Biobase::exprs(GSE50244.bulk.eset)
 ```
 
+#Estimate proportions with MuSiC and NNLS
 ```{r}
 # Bulk expression matrix
 bulk.mtx = Biobase::exprs(GSE50244.bulk.eset)
@@ -44,10 +58,7 @@ names(Est.prop.GSE50244)
 
 ```
 ```{r}
-library(MuSiC)
-library(dplyr)
-library(reshape2)
-library(cowplot)
+
 # Jitter plot of estimated cell type proportions
 jitter.fig = Jitter_Est(list(data.matrix(Est.prop.GSE50244$Est.prop.weighted),
                              data.matrix(Est.prop.GSE50244$Est.prop.allgene)),
@@ -97,7 +108,7 @@ ggplot(m.prop.ana, aes(HbA1c, ct.prop)) +
 ```
 
 
-
+#Compare correlation between beta cells and T2D (measured by HbA1c test), for both MuSiC and NNLS
 ```{r}
 lm.beta.MuSiC = lm(ct.prop ~ HbA1c + Age + BMI + Gender, data = subset(m.prop.ana, Method == 'MuSiC'))
 lm.beta.NNLS = lm(ct.prop ~ HbA1c + Age + BMI + Gender, data = subset(m.prop.ana, Method == 'NNLS'))
@@ -105,17 +116,23 @@ summary(lm.beta.MuSiC)
 
 summary(lm.beta.NNLS)
 ```
-##pregrouping cell types 
+
+
+##Similar analysis with cell types pre-grouped (tree-based version)
 ```{r}
 #https://xuranw.github.io/MuSiC/data/Mousesub_sce.rds
 #https://xuranw.github.io/MuSiC/data/Mousesub_sce.rds
+
+#single cell data are from GEO entry (GSE107585) (see Park et al. 2018), which constrains read counts for 16273 genes across 43745 cells. 
 Mousesub.sce <- readRDS("/cloud/project/Mousesub_sce.rds")
+#GEO entry (GSE81492) (see Beckerman et al. 2017) contains raw RNA-seq and sample annotation data
 Mouse.bulk.eset <- readRDS('/cloud/project/Mousebulkeset.rds')
 
 
 levels(Mousesub.sce$cellType)
 ```
 
+#Creating the tree hierarchical tree:  produce design matrix, cross-subject mean of relative abundance, cross-subject variance of relative abundance and average library size from single cell reference. 
 ```{r}
 # Produce the first step information
 Mousesub.basis = music_basis(Mousesub.sce, clusters = 'cellType', samples = 'sampleID', 
@@ -136,6 +153,8 @@ hc2 <- hclust(d, method = "complete")
 # Plot the obtained dendrogram
 plot(hc2, cex = 0.6, hang = -1, main = 'Cluster log(Mean of RA)')
 ```
+
+
 ```{r eval=FALSE, include=FALSE}
 x <- t(Mousesub.basis$Disgn.mtx)
 dim(x)
@@ -151,8 +170,7 @@ hfr(x, y, kappa = 0.75)
 
 
 ```{r}
-library(hfr)
-library(glmnet)
+
 
 data("QuickStartExample", package = "glmnet")
 data <- QuickStartExample
@@ -285,7 +303,7 @@ plot2
 
 
 ```{r eval=FALSE, include=FALSE}
-library(Seurat)
+
 pbmc <- CreateSeuratObject(counts = pbmc, project = "pbmc3k", min.cells = 3, min.features = 200)
 ```
 
